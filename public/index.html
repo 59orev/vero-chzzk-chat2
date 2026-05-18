@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>치지직 채팅 수집 대시보드</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; background: #0f1015; color: #fff; margin: 30px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #00ffa3; border-bottom: 2px solid #1f2330; padding-bottom: 15px; }
+        .status-card { background: #1f2330; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { padding: 8px 15px; border-radius: 20px; font-weight: bold; }
+        .live { background: #ff0055; animation: blink 1.5s infinite; }
+        .offline { background: #555; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #1f2330; padding: 20px; border-radius: 10px; min-height: 300px; }
+        h2 { color: #00e5ff; font-size: 1.2rem; margin-top: 0; }
+        .keyword-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2f354a; }
+        .keyword-word { font-weight: bold; color: #fff; }
+        .keyword-count { color: #00ffa3; }
+        ul { list-style: none; padding: 0; }
+        li a { color: #aaa; text-decoration: none; display: block; padding: 8px; border-radius: 5px; }
+        li a:hover { background: #2f354a; color: #00ffa3; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>

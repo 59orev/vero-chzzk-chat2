@@ -1,0 +1,9 @@
+{
+  "name": "chzzk-dashboard",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "chzzk": "^2.1.0",
+    "express": "^4.19.2"
+  }
+}
