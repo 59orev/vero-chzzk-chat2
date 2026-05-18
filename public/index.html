@@ -2,23 +2,117 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>치지직 채팅 수집 대시보드</title>
+    <title>치지직 멀티 채널 수집 대시보드</title>
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; background: #0f1015; color: #fff; margin: 30px; }
-        .container { max-width: 900px; margin: 0 auto; }
-        h1 { color: #00ffa3; border-bottom: 2px solid #1f2330; padding-bottom: 15px; }
-        .status-card { background: #1f2330; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .status-badge { padding: 8px 15px; border-radius: 20px; font-weight: bold; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        h1 { color: #00ffa3; border-bottom: 2px solid #1f2330; padding-bottom: 15px; margin-bottom: 30px; }
+        
+        /* 채널들을 가로로 배열하기 위한 그리드 */
+        .channels-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        
+        .channel-card { background: #1f2330; padding: 20px; border-radius: 12px; border: 1px solid #2f354a; position: relative; }
+        .channel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #2f354a; padding-bottom: 10px; }
+        .channel-name { font-size: 1.1rem; font-weight: bold; color: #00e5ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+        
+        .status-badge { padding: 5px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
         .live { background: #ff0055; animation: blink 1.5s infinite; }
         .offline { background: #555; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: #1f2330; padding: 20px; border-radius: 10px; min-height: 300px; }
-        h2 { color: #00e5ff; font-size: 1.2rem; margin-top: 0; }
-        .keyword-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2f354a; }
-        .keyword-word { font-weight: bold; color: #fff; }
-        .keyword-count { color: #00ffa3; }
-        ul { list-style: none; padding: 0; }
-        li a { color: #aaa; text-decoration: none; display: block; padding: 8px; border-radius: 5px; }
-        li a:hover { background: #2f354a; color: #00ffa3; }
+        
+        .file-info { font-size: 0.85rem; color: #888; margin-bottom: 15px; min-height: 38px; }
+        
+        .keyword-section h3 { font-size: 0.95rem; color: #00ffa3; margin: 0 0 10px 0; }
+        .keyword-item { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.9rem; border-bottom: 1px dashed #2f354a; }
+        .keyword-word { color: #fff; }
+        .keyword-count { color: #888; }
+        
+        .backup-card { background: #161822; padding: 20px; border-radius: 12px; border: 1px solid #252a3d; }
+        .backup-card h2 { color: #fff; font-size: 1.2rem; margin-top: 0; }
+        ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+        li a { background: #1f2330; color: #aaa; text-decoration: none; display: block; padding: 10px; border-radius: 6px; border: 1px solid #2f354a; font-size: 0.9rem; }
+        li a:hover { background: #2f354a; color: #00ffa3; border-color: #00ffa3; }
+        
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chzzk Multi-Chat Analyzer 📊</h1>
+        
+        <!-- 실시간 채널 현황판 -->
+        <div class="channels-grid" id="channels-container">
+            <p style="color:#666;">채널 정보를 불러오는 중...</p>
+        </div>
+
+        <!-- 통합 파일 다운로드 공간 -->
+        <div class="backup-card">
+            <h2>📥 통합 CSV 백업 다운로드</h2>
+            <ul id="file-list">
+                <li style="color:#666;">저장된 파일이 없습니다.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function updateDashboard() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                // 1. 채널 카드들 그리기
+                const container = document.getElementById('channels-container');
+                if (!data.channels || data.channels.length === 0) {
+                    container.innerHTML = `<p style="color:#ff0055;">설정된 채널 ID가 없습니다. Render 환경 변수를 확인해주세요.</p>`;
+                } else {
+                    container.innerHTML = data.channels.map(ch => {
+                        const statusText = ch.isLive ? "LIVE 수집중" : "방송 대기중";
+                        const statusClass = ch.isLive ? "status-badge live" : "status-badge offline";
+                        const fileText = ch.currentFile ? `💾 수집중: <span style="color:#fff">${ch.currentFile}</span>` : "💤 현재 저장 중인 파일 없음";
+                        
+                        let keywordHtml = `<p style="color:#555; font-size:0.85rem; text-align:center; margin-top:20px;">분석 데이터 없음</p>`;
+                        if (ch.topKeywords && ch.topKeywords.length > 0) {
+                            keywordHtml = ch.topKeywords.map((item, idx) => `
+                                <div class="keyword-item">
+                                    <span><span style="color:#555; margin-right:8px;">${idx+1}</span><span class="keyword-word">${item.word}</span></span>
+                                    <span class="keyword-count">${item.count}회</span>
+                                </div>
+                            `).join('');
+                        }
+
+                        return `
+                            <div class="channel-card">
+                                <div class="channel-header">
+                                    <div class="channel-name" title="${ch.id}">🆔 ${ch.id}</div>
+                                    <span class="${statusClass}">${statusText}</span>
+                                </div>
+                                <div class="file-info">${fileText}</div>
+                                <div class="keyword-section">
+                                    <h3>🔥 실시간 키워드 TOP 5</h3>
+                                    ${keywordHtml}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // 2. 파일 목록 그리기
+                const fileList = document.getElementById('file-list');
+                if (!data.files || data.files.length === 0) {
+                    fileList.innerHTML = `<li style="color:#666;">저장된 백업 파일이 없습니다.</li>`;
+                } else {
+                    fileList.innerHTML = data.files.map(file => `
+                        <li><a href="/${file}" download>📥 ${file}</a></li>
+                    `).join('');
+                }
+
+            } catch (err) {
+                console.error("데이터 동기화 실패:", err);
+            }
+        }
+
+        // 3초마다 화면 갱신
+        setInterval(updateDashboard, 3000);
+        updateDashboard();
+    </script>
+</body>
+</html>
