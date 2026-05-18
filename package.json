@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "chzzk": "^2.1.0",
+    "chzzk": "latest",
     "express": "^4.19.2"
   }
 }
